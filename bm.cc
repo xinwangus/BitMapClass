@@ -57,14 +57,18 @@ void
 BitMap::setBit(int p)
 {
 	assert(p < size);
+	mlock.lock();
 	bits[p/8] |= (1 << (p%8));
+	mlock.unlock();
 }
 
 void
 BitMap::unsetBit(int p)
 {
 	assert(p < size);
+	mlock.lock();
 	bits[p/8] &= ~(1 << (p%8));
+	mlock.unlock();
 }
 
 bool
@@ -78,7 +82,6 @@ BitMap::isBitSet(int p)
 int main()
 {
 	// test
-
 	BitMap* bmp = BitMap::getInstance();
 	if (bmp) {
 		(void)bmp->growSize(16);
@@ -94,6 +97,7 @@ int main()
 
 	BitMap* bmp2 = BitMap::getInstance();
 	if (bmp2) {
+		// test singleton
 		cout << "Is bit pos 3 set? " <<
 		   	bmp2->isBitSet(3) << endl;
 	}
