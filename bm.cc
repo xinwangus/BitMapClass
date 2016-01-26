@@ -12,27 +12,44 @@ BitMap::~BitMap()
 }
 
 BitMap* BitMap::bm = 0;
+std::mutex BitMap::mlock;
 
 // singleton.
 BitMap*
 BitMap::getInstance()
 {
-	// TODO locking.
+	BitMap* temp = 0;
 	if (bm == 0) {
-		bm = new BitMap();
+		temp = new BitMap();
+	} else {
+		return bm;
 	}
+	mlock.lock();
+	if (bm == 0) {
+		bm = temp;
+		temp = 0;
+	} 
+	mlock.unlock();
+
+	if (temp != 0) {
+		delete temp;
+	}
+
 	return bm;
 }
 
 bool
 BitMap::growSize(int s)
 {
+	mlock.lock();
 	if (size >= s) {
+		mlock.unlock();
 		return false;
 	}
 	size = s;	
-	// TOD Why? to avoid seg fault.
 	bits.resize(size/8 + 1);
+	
+	mlock.unlock();
 	return true;
 }
 
