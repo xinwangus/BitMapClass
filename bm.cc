@@ -46,7 +46,6 @@ BitMap::growSize(int s)
 {
 	std::lock_guard<std::mutex> lg(mlock);
 	if (size >= s) {
-		mlock.unlock();
 		return false;
 	}
 	size = s;	
