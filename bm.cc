@@ -24,12 +24,15 @@ BitMap::getInstance()
 	} else {
 		return bm;
 	}
-	mlock.lock();
-	if (bm == 0) {
-		bm = temp;
-		temp = 0;
-	} 
-	mlock.unlock();
+
+	{
+		// RAII
+		std::lock_guard<std::mutex> lg(mlock);
+		if (bm == 0) {
+			bm = temp;
+			temp = 0;
+		} 
+	}
 
 	if (temp != 0) {
 		delete temp;
@@ -41,7 +44,7 @@ BitMap::getInstance()
 bool
 BitMap::growSize(int s)
 {
-	mlock.lock();
+	std::lock_guard<std::mutex> lg(mlock);
 	if (size >= s) {
 		mlock.unlock();
 		return false;
@@ -49,7 +52,6 @@ BitMap::growSize(int s)
 	size = s;	
 	bits.resize(size/8 + 1);
 	
-	mlock.unlock();
 	return true;
 }
 
@@ -57,24 +59,23 @@ void
 BitMap::setBit(int p)
 {
 	assert(p < size);
-	mlock.lock();
+	std::lock_guard<std::mutex> lg(mlock);
 	bits[p/8] |= (1 << (p%8));
-	mlock.unlock();
 }
 
 void
 BitMap::unsetBit(int p)
 {
 	assert(p < size);
-	mlock.lock();
+	std::lock_guard<std::mutex> lg(mlock);
 	bits[p/8] &= ~(1 << (p%8));
-	mlock.unlock();
 }
 
 bool
 BitMap::isBitSet(int p)
 {
 	assert(p < size);
+	std::lock_guard<std::mutex> lg(mlock);
 	return (bits[p/8] & (1 << (p%8)));
 }
 
